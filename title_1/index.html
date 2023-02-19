@@ -4,6 +4,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
 
     <!-- uRL for .css styling default from py-script-->
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
@@ -27,18 +29,18 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.145.0/examples/js/curves/NURBSUtils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/ParametricGeometries.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/ParametricGeometry.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/helpers/VertexNormalsHelper.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/helpers/VertexTangentsHelper.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/exporters/STLExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/helpers/VertexNormalsHelper.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/helpers/VertexTangentsHelper.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/STLExporter.js"></script>
    
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/lines/LineGeometry.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/lines/LineSegmentsGeometry.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/lines/Wireframe.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/lines/WireframeGeometry2.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/exporters/OBJExporter.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/exporters/GLTFExporter.js"></script>
-    <script src= "https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/loaders/3DMLoader.js"></script>
-    <script src= "https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/lines/LineGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/lines/LineSegmentsGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/lines/Wireframe.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/lines/WireframeGeometry2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/OBJExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script src= "https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/3DMLoader.js"></script>
+    <script src= "https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/OBJLoader.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/rhino3dm@0.15.0-beta/rhino3dm.module.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -53,49 +55,71 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/lines/LineGeometry.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/GeometryUtils.js"></script>
 
-
-
-
-
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/src/loaders/Loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/src/loaders/BufferGeometryLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/src/loaders/BufferGeometryLoader.js"></script>">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/src/loaders/ObjectLoader.js"></script>">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/GLTFExporter.js"></script>">
     
-   
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js"></script>">
+
     <!-- uRLs for including export libraries for 3d structure transport  -->
 
     <script src="https://gist.githubusercontent.com/kjlubick/fb6ba9c51df63ba0951f/raw/b534aa3793e991bee745bf6ed767c68867d783aa/STLExporter.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.umd.min.js"></script>
-    
 
+    <script type="text/javascript">
+        function downloadFile(filename) {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", filename, true);
+          xhr.responseType = "blob";
+          xhr.onload = function() {
+            var url = URL.createObjectURL(xhr.response);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+          };
+          xhr.send();
+        }
+      </script>
+    
+   
     <py-config>
         packages = [
         "numpy",
         "scipy",
-        "matplotlib"
+        "matplotlib",
+        "requests",
+        "wand",
+        "bitarray",
+        "trimesh",
+        "flask",
+        "prometheus_client"
         ]
     </py-config>
-
-    <link rel="stylesheet" href="styleApp.css">
-
 
     
 </head>
     
 <body>
-    <!-- the directory of the pyscript skecth file -->
     <img src="logoshevillon.png" alt="Logo-Shevillon">
-    <py-script src="webapp_1.py">
-    </py-script>
 
-     <script>
+    <script>
         const myTimeout = setTimeout(message, 5000);
 		function message(){
             alert("Tutorial:\n\n1st step:\nClick on the spheres and drag them around to modify the base-surface of your structure.\n\n2nd step:\nNext, click on the button to your right to get an overview of your design options. There are different ways to create a geometry, which will be mapped on your base.\nTipp: Don't be greedy, take one click at a time and watch your design grow!\n\n3rd step:\nHappy with your design? Click -hide surface- to round it up! For removing the gumball from the screen doubleclick  anywhere. If you want to generate new geometry, click the reset button.\n\nhave fun :)");  
         }
 		
     </script>
-    
-    
-    
+    <!-- the directory of the pyscript skecth file -->
+    <py-script src="SURFACECHANGE.py"></py-script>
+    <p>
+        <button class="download-button"onclick="downloadFile('linea.obj')">EXPORT</button>
+    <p>
 
-</body>
+    <body>  
+    
 </html>
