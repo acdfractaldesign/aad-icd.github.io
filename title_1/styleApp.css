@@ -11,6 +11,7 @@
     --shad-col: rgba(0, 0, 0, 0.36);
 }
 
+
 div.lil-gui.allow-touch-styles.root.autoPlace {
     position: fixed;
     right: var(--dist-edge);
@@ -33,7 +34,6 @@ div.button {
     appearance: auto;
 }
 
-
 div.title {
     color: var(--text-col2)  !important;
     background-color: var(--col-3)!important;
@@ -41,11 +41,13 @@ div.title {
     margin: 3px;
    
 }
+
 div.widget{
     color: var(--main-col);
     background-color: var(--col-2);
 
 }
+
 div.controller.function {
     background-color: var(--main-col);
 
@@ -69,8 +71,6 @@ div.children {
     color: var(--text-col);
     background-color: var(--main-col);
 }
-
-
 
 div#lil-gui-name-1.name {
     border-radius: var(--brd-rad2)!important;
@@ -97,7 +97,6 @@ div#lil-gui-name-3.name {
     position: relative;
 }
 
-
 div#lil-gui-name-4.name {
     border-radius: var(--brd-rad2)!important;
     color: var(--text-col);
@@ -105,7 +104,6 @@ div#lil-gui-name-4.name {
     box-shadow: 0px 0px 1px 4px var(--main-col);
     position: relative;
 }
-
 
 div#lil-gui-name-5.name {
     border-radius: var(--brd-rad2)!important;
@@ -123,6 +121,7 @@ div#lil-gui-name-6.name {
     position: relative;
 }
 
+
 div#lil-gui-name-7.name {
     border-radius: var(--brd-rad2)!important;
     color: var(--text-col);
@@ -130,7 +129,6 @@ div#lil-gui-name-7.name {
     box-shadow: 0px 0px 1px 4px var(--main-col);
     position: relative;
 }
-
 
 div#lil-gui-name-8.name {
     border-radius: var(--brd-rad2)!important;
@@ -306,6 +304,91 @@ div#lil-gui-name-30.name {
     position: relative;
 }
 
+div#lil-gui-name-31.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+
+div#lil-gui-name-32.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+
+
+div#lil-gui-name-33.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+div#lil-gui-name-34.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+div#lil-gui-name-35.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+div#lil-gui-name-36.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+div#lil-gui-name-37.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+div#lil-gui-name-38.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+
+div#lil-gui-name-39.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
+
+div#lil-gui-name-40.name {
+    border-radius: var(--brd-rad2)!important;
+    color: var(--text-col);
+    background-color: var(--col-2) !important;
+    box-shadow: 0px 0px 1px 4px var(--main-col);
+    position: relative;
+}
+
 
 div.lil-gui-button {
     color: red;
@@ -316,11 +399,14 @@ div.lil-gui-button {
 canvas{
 
     position: absolute;
+    margin-top: 0;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 200;
+    margin-bottom: 30;
+    
 }
+
 
 img {
     border: 1px solid var(--main-col);
@@ -333,10 +419,23 @@ img {
     z-index: 3;
     background-color: var(--main-col);
     box-shadow: 2px 2px 10px var(--shad-col);
-  }
-  
-  
+}
 
+
+.download-button {
+    position: fixed;
+    bottom: 20px;
+    right: 40px;
+    background-color: rgb(46, 46, 46);
+    border-bottom-color: white !important;
+    font-family: Helvetica, sans-serif;
+    color:  rgb(243, 240, 235);
+    padding: 5px 20px;
+    border-radius: 6px;
+    border-color: rgb(46, 46, 46);
+    cursor: pointer;
+    z-index: 3;
+  }
 
 
 
