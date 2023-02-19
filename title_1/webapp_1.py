@@ -1,10 +1,23 @@
-
+import typing
 import numpy as np
 import math, random
 from js import THREE, window, document, Object, console
 from pyodide.ffi import create_proxy, to_js
-from random import uniform
+from pyscript import *
+
+#from prometheus_client import start_http_server, Metric, REGISTRY
+
+import urllib.request as request
+import json
+import requests
+import sys
+import time
+
 import math
+from scipy.spatial import Voronoi
+from scipy.spatial.distance import cdist
+
+
 
 
 
@@ -16,9 +29,6 @@ def main():
     # Declare the variables
     global renderer, scene, camera, controls,composer,console
 
-    #Test THREE.MeshLine
-
-    
     #Set up the renderer
     renderer = THREE.WebGLRenderer.new()
     renderer.setPixelRatio( window.devicePixelRatio )
@@ -54,6 +64,8 @@ def main():
 
     dirLight = THREE.DirectionalLight.new( 0xffffff )
     dirLight.position.set( - 0, 40, 50 )
+
+
     dirLight.castShadow = True
     dirLight.shadow.camera.top = 50
     dirLight.shadow.camera.bottom = - 25
@@ -66,16 +78,23 @@ def main():
 
     global geom_params
 
+    
+
     #basic paramteres gui
     
     geom_params=  {
        
         #buttonfunctions
+
         "fractal": buttonfunctionfractal1, 
         "fractal1":buttonfunctionfractal2,
         "walkerdesign":buttonfunctionwalker,
         "reset":buttonfunctionresetbutton,
-    
+        "export":buttonexporter,
+        "voronoi": buttonvoronoi,
+        "lattice": buttonlattice,
+
+        
         
         #attractorfunctions
         "attractorA": buttonattractorA,
@@ -83,19 +102,24 @@ def main():
         "attractorC": buttonattractorC,
         "attractorD":  buttonattractorD,
         
-        #triangles
-        "triangles":buttonfunction3,
+
+        #triangle
         "finish it!": buttonfunctionfin,
         
-        #visibility surface
+        #visivility surface
         "surfacevisible": buttonsceneaddsurface,
         "surfaceunvisible": buttonfunctionremovesrf,
+
+        "density": 200, 
+
+        "densitylattice": 1,
 
         #walkerstepsizes
         "stepsizea": 1,
         "stepsizeb": 2,
 
         #attractor2densities
+
         "densityregionA": 400,
         "numberiterationsfractal":4,
         
@@ -107,13 +131,14 @@ def main():
         "branch1":45,
         "numberiterationsfirstfractal": 4,
 
-        #triangle
+        #traingle
+
         "maximumiterationstriangle":3,
 
         #fielddimensions
+
         "fieldsize": 40,
 
-        #presentation
         "transparencysurface": 0.05, 
         "transparentlines": 0.3
         
@@ -134,15 +159,15 @@ def main():
     knots2 = [0,0,0,0,0,1,1,1,1,1]
     knots2 = to_js(knots2)
 
+    
+    
 
     #list
-    global surfaces, linesa, visgeometries
+    global surfaces, visgeometries, density, densitylattice
    
-
     visgeometries = []
 
     surfaces = []
-
 
     global iteration_count
 
@@ -160,22 +185,32 @@ def main():
 
 
     #variables for the fractal1
-    fractalangle1 = geom_params.branch1
 
+    fractalangle1 = geom_params.branch1
     numberiterationsfirstfractal = geom_params.numberiterationsfirstfractal
 
     
     #variables for fractal2
+
     fractal2iterations = geom_params.maxiterations
 
     
     #walkersstepsize
+
     global stepsizewalker, stepsizewalkerB
     
     stepsizewalker = geom_params.stepsizea
-
     stepsizewalkerB = geom_params.stepsizeb
     
+
+    #densityvoronoi
+
+    density = geom_params.density
+
+
+    #densitylattice
+
+    densitylattice = geom_params.densitylattice
 
 
     #attractor2variables
@@ -245,7 +280,7 @@ def main():
 
     linematerialfinal = THREE.LineBasicMaterial.new()
     linematerialfinal.color = THREE.Color.new("rgb(40,40,40)")
-    linematerialfinal.linewidht = 0.003
+    linematerialfinal.linewidht = 0.006
 
     linematerialfinal.transparent = True
     linematerialfinal.opacity = 0.3
@@ -258,7 +293,7 @@ def main():
 
     new_material = THREE.LineMaterial.new()
     new_material.color =  THREE.Color.new(0xff0000 )
-    new_material.linewidth= 0.005
+    new_material.linewidth= 0.008
     new_material.transparent = True
     new_material.opacity = 0.6
     new_material.vertexColors= True
@@ -275,7 +310,7 @@ def main():
     field_width = geom_params.fieldsize
 
 
-    global pointsA, pointsB
+    global pointsA, pointsB, pointsC, pointsD, pointsE
     global last_point, last_point2, last_point3, last_point4
 
     
@@ -285,7 +320,7 @@ def main():
     last_point4 = np.array([0, 0])
     
   
-    global walkerA, walkerB
+    global walkerA, walkerB, walkerC, walkerD, walkerE
     
     walkerA = (20,20) 
     walkerB = (0,0)
@@ -311,7 +346,6 @@ def main():
     controls.maxDistance = 200
 
 
-    #chnanginghandles of the surface
     global ACTION_SELECT, ACTION_NONE, action
     ACTION_SELECT = 1
     ACTION_NONE = 0
@@ -330,8 +364,6 @@ def main():
     raycaster = THREE.Raycaster.new()
     transform_controls = THREE.TransformControls.new(camera, renderer.domElement)
 
-    #diplay interaction functions
-
     on_object_changed_proxy = create_proxy(on_object_changed)
     transform_controls.addEventListener( 'objectChange', on_object_changed_proxy)
 
@@ -339,20 +371,59 @@ def main():
     transform_controls.addEventListener( 'dragging-changed', on_dragging_changed_proxy) 
 
     on_pointer_down_proxy = create_proxy(on_pointer_down)
-    #on_pointer_up_proxy = create_proxy(on_pointer_up)
     on_pointer_move_proxy = create_proxy(on_pointer_move)
+
+   
+    document.addEventListener( 'pointerdown', on_pointer_down_proxy )
+    document.addEventListener( 'pointermove', on_pointer_move_proxy )
 
     on_double_click_proxy = create_proxy(on_double_click)
     document.addEventListener( 'dblclick', on_double_click_proxy )
 
-    document.addEventListener( 'pointerdown', on_pointer_down_proxy )
-    #document.addEventListener( 'pointerup', on_pointer_up_proxy )co
-    document.addEventListener( 'pointermove', on_pointer_move_proxy )
-
+    
+    #btn = document.getElementById('download-glb')
+    #document.addEventListener('click', download)
+    
+    global link, geometry
+    
+    link = document.createElement('a')
+    document.body.appendChild(link)
 
     render()
 
 
+
+def export_obj(obj, filename):
+    exporter = THREE.OBJExporter.new()
+    result = exporter.parse(obj)
+    
+    with open(filename, "w") as f:
+
+        console.log(result)
+        f.write(result)
+        
+
+
+def buttonexporter():
+    global geometry_mesh
+    export_to_obj(geometry_mesh)
+
+
+def export_to_obj(geometry_mesh):
+    exporter = THREE.OBJExporter.new()
+    result = exporter.parse(geometry_mesh)
+    save_string(result, 'object.obj')
+
+
+def save_string(text, filename):
+    
+    with open(filename, 'w') as f:
+        f.write(text)
+
+
+    console.log(text)
+
+        
 
 def basicsurface(transparency):
 
@@ -405,7 +476,7 @@ def basicsurface(transparency):
     ]
 
     
-    global surface, geometry_mesh
+    global surface, geometry_mesh, geometry
     initial_points_js = to_js(initial_points)
     surface = THREE.NURBSSurface.new(degree1, degree2, knots1, knots2, initial_points_js)
 
@@ -414,6 +485,7 @@ def basicsurface(transparency):
     
     
     geometry = THREE.ParametricGeometry.new(getPoints, 30,30)
+    console.log(geometry)
     geometry_mesh = THREE.Mesh.new(geometry, meshplane)
     scene.add(geometry_mesh)
 
@@ -573,6 +645,8 @@ def basicWalkerA(startingpoint = (20,20), starting_pointsB = (25,25)):
         pointsB.append(np.array(walkerB))
 
 
+
+
 def generate(symbol):
     if symbol == "X":
         return "F[+X]F[-X]+X"
@@ -600,54 +674,16 @@ def system(current_iteration, max_iterations, axiom):
         return system(current_iteration, max_iterations, new_axiom)
     
 
-def triangle(points,iterations):
-
-    global pointsA
-    
-    for i in range(iterations):
-        new_points = []
-        for point in points:
-
-            new_points.append(point + np.array([40, 0]) / 2**(i+1))
-            new_points.append(point + np.array([0, 40]) / 2**(i+1))
-            new_points.append(point + np.array([40, 40]) / 2**(i+1))
-
-        points = new_points
-    for point in points:
-        if point[0] < 0 or point[0] > field_length or point[1] < 0 or point[1] > field_width:
-            continue
-        pointsA.append(point)
-
-
-
-def triangle2(points, iterations):
-
-    global pointsA
-
-    for i in range(iterations):
-        new_points = []
-        for point in points:
-
-            new_points.append(point + np.array([40, 0]) / 2**(i+1))
-            new_points.append(point + np.array([0, 40]) / 2**(i+1))
-            new_points.append(point + np.array([0, 0]) / 2**(i+1))
-
-        points = new_points
-    for point in points:
-        if point[0] < 0 or point[0] > field_length or point[1] < 0 or point[1] > field_width:
-            continue
-        pointsA.append(point)
-
  
 
 def firstfractal(axiom, start_pt, start_pt2, start_pt3, start_pt4):
 
     global pointsA, fractal2iterations
 
-    move_vec = np.array([1,1,1])
-    move_vec2 = np.array([-1,1,-1])
-    move_vec3 = np.array([-1,-1,-1])
-    move_vec4 = np.array([1, -1, 1])
+    move_vec = np.array([1.1,1.1,1.1])
+    move_vec2 = np.array([-1.1,1.1,-1.1])
+    move_vec3 = np.array([-1.1,-1.1,-1.1])
+    move_vec4 = np.array([1.1, -1.1, 1.1])
 
     old_states = []
     old_states2 = []
@@ -681,6 +717,8 @@ def firstfractal(axiom, start_pt, start_pt2, start_pt3, start_pt4):
             new_pt4 = new_pt4 + move_vec4
             line = []
 
+
+            console.log(to_js(old3))
             
             pointsA.append(old)
             pointsA.append(new_pt)
@@ -702,7 +740,7 @@ def firstfractal(axiom, start_pt, start_pt2, start_pt3, start_pt4):
 
 
         elif symbol == "+": 
-            angle = math.pi/7
+            angle = math.pi/6
             c, s = np.cos(angle), np.sin(angle)
             R = np.array(((c, -s, 0), (s, c, 0), (0, 0, 1)))
             move_vec = np.dot(R, move_vec)
@@ -712,7 +750,7 @@ def firstfractal(axiom, start_pt, start_pt2, start_pt3, start_pt4):
             
         
         elif symbol == "-":
-            angle = -math.pi/7
+            angle = -math.pi/6
             c, s = np.cos(angle), np.sin(angle)
             R = np.array(((c, -s, 0), (s, c, 0), (0, 0, 1)))
             move_vec = np.dot(R, move_vec)
@@ -803,7 +841,7 @@ def generate_l_system_fractal(iterations):
 
   
     step = 1
-    angle_change = 30* fractalanglefactor
+    angle_change = 40* fractalanglefactor
 
    
     for i in range(4):
@@ -829,6 +867,8 @@ def generate_l_system_fractal(iterations):
                 point = point + np.array([np.cos(np.deg2rad(angle)), np.sin(np.deg2rad(angle))]) * step
                 if point[0] < 0 or point[0] > 40 or point[1] < 0 or point[1] > 40:
                     continue
+
+                
                 pointsA.append(np.array([point[0], point[1]]))
             
             elif char == "+":
@@ -849,7 +889,178 @@ def generate_l_system_fractal(iterations):
 
 
         last_point,last_point2, last_point3, last_point4 = points
-                
+
+
+
+def buttonvoronoi():
+
+    global pointsA, density, visgeometries
+   
+    if density != geom_params.density:
+
+        for geometries in visgeometries:
+            scene.remove(geometries)
+        
+        
+        density = geom_params.density
+
+        voronoibasic(density )
+
+        draw_systemA()
+
+        update_linesa_on_surface(transparentlines)
+
+    else:
+
+        voronoibasic(density )
+        #voronoi()
+
+        draw_systemA()
+
+        update_linesa_on_surface(transparentlines)
+
+
+def voronoi():
+
+    # Set grid size and border
+    size = 40
+    border = 2
+
+    # Create random points within a smaller rectangle with border
+    points = np.random.rand(50, 2) * (size - 2*border) + border
+
+    # Compute Voronoi tessellation
+    vor = Voronoi(points)
+
+    # Clip Voronoi vertices to grid boundaries
+    vertices = vor.vertices
+    vertices[:, 0] = np.clip(vertices[:, 0], border, size-border)
+    vertices[:, 1] = np.clip(vertices[:, 1], border, size-border)
+
+    # Sort Voronoi points by region indices
+    sorted_points = []
+    for i, region in enumerate(vor.regions):
+        if -1 in region: # ignore regions outside of the Voronoi diagram
+            continue
+        if not region or max(region) >= len(vertices): # ignore empty regions and regions with invalid indices
+            continue
+        vertices = [vertices[i] for i in region]
+        sorted_points.append(vertices)
+
+
+
+    # Store Voronoi points as numpy arrays in a list
+    #vor_list = []
+    for points in sorted_points:
+        for point in points:
+            pointsA.append(np.array(point))
+
+
+def density_func(dist, a=10, b=0.05):
+
+    global size, border
+
+    return 1 / (1 + np.exp(-a * (dist - size/2) * b))
+
+
+
+def distance_to_edge(x, y, w, h):
+    return min(x, y, w-x, h-y)
+
+def density_function(x, y, w, h, max_density):
+    d = distance_to_edge(x, y, w, h)
+    return 1 + (max_density - 1) * (1 - d / max(w, h))
+
+
+
+def voronoibasic(density):
+
+    global pointsA
+    
+    size = 40
+    border = 0
+
+
+    # Create random points within a smaller rectangle with border
+    points = np.random.rand(density, 2) * (size - 2*border) + border
+
+    # Compute Voronoi tessellation
+    vor = Voronoi(points)
+
+    # Clip Voronoi vertices to grid boundaries
+    vertices = vor.vertices
+    vertices[:, 0] = np.clip(vertices[:, 0], border, size-border)
+    vertices[:, 1] = np.clip(vertices[:, 1], border, size-border)
+
+    
+    # Sort Voronoi points by region width
+    sorted_points = []
+    for i, region in enumerate(vor.regions):
+        if -1 in region or len(region) == 0:
+            continue
+        region_vertices = [vertices[i] for i in region if i < len(vertices)]
+        if len(region_vertices) > 0:
+            sorted_points.append(np.array(region_vertices))
+
+    indices = np.argsort([points[:, 0].max() - points[:, 0].min() for points in sorted_points])[::-1]
+
+    # Store Voronoi points in a list, sorted by width
+    sorted_regions = [sorted_points[i] for i in indices]
+    
+    
+    for points in sorted_regions:
+        for point in points:
+            pointsA.append(np.array(point))
+
+
+
+def buttonlattice():
+
+    global densitylattice
+    
+
+    if densitylattice != geom_params.densitylattice:
+
+        for geometries in visgeometries:
+            scene.remove(geometries)
+
+        densitylattice = geom_params.densitylattice
+
+        simplelatticestructure(densitylattice)
+
+        draw_systemA()
+
+        update_linesa_on_surface(transparentlines)
+
+    else:
+
+        densitylattice = geom_params.densitylattice
+
+        simplelatticestructure(densitylattice)
+
+        draw_systemA()
+
+        update_linesa_on_surface(transparentlines)
+
+
+
+def simplelatticestructure(densitylattice):
+
+    global pointsA, pointsB
+
+    
+    # Set the size of the rectangular surface and the density factor
+    length = 40
+    width = 40
+
+    
+    # Generate the lattice points
+    for x in np.arange(0, length, densitylattice):
+        for y in np.arange(0, width, densitylattice):
+            point = np.array([x, y])
+            point2 = np.array([y, x])
+            pointsA.append(point)
+            pointsB.append(point2)
 
 
 
@@ -858,7 +1069,7 @@ def draw_systemA():
     #cleanded lines pointsA----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     global threecurrentline, baseshapelines, threecurrentline2, baseshapelines2
-    global pointsA, pointsB
+    global pointsA, pointsB, pointsC, pointsD, pointsE
     threecurrentline = []
     baseshapelines = []
 
@@ -892,7 +1103,7 @@ def draw_systemA():
 
         dist = threee_points[0].distanceTo(threee_points[1])
     
-        if dist < 6:
+        if dist < 4:
             cleaned_baseshapelines.append(points)
     
 
@@ -927,7 +1138,7 @@ def draw_systemA():
 
         dist = threee_points[0].distanceTo(threee_points[1])
       
-        if dist < 6:
+        if dist < 4:
             cleaned_baseshapelines2.append(points)
     
 
@@ -941,7 +1152,7 @@ def guifunction():
     global geometry_mesh
 
     #gui creation
-    global folder1, folder2, folder3, folder4, folder5, gui
+    global folder1, folder2, folder3, folder4, folder5, folder6, gui
 
     gui = window.lil.GUI.new()
     gui.title('CREATE YOUR OWN STRUCTURE !')
@@ -978,15 +1189,22 @@ def guifunction():
     folder4.add(geom_params, 'attractorD').name('attractorD')
     folder4.close()
 
-    #TRIANGLES
+    #lattice
 
-    folder5= gui.addFolder('6th - Sierpinski-triangle')
-    folder5.add(geom_params, "triangles", 0,5,1).name('create a triangle fractal !')
+    folder5 = gui.addFolder('6th -latticestrucuture')
+    folder5.add(geom_params, 'lattice').name('latticegrid ')
+    folder5.add(geom_params,'densitylattice', 1,4, 0.1).name('spacing')
     folder5.close()
 
-    
+    #voronoi
+
+    folder6 = gui.addFolder('7th - Voronoi')
+    folder6.add(geom_params,'density', 600,700, 1).name('density of voronoi')
+    folder6.add(geom_params, 'voronoi').name('voronoi')
+    folder6.close()
+
     gui.add(geom_params, 'reset')
-    
+
     surfacegui()
         
     gui.close()
@@ -998,11 +1216,11 @@ def buttonfunctionfractal1():
 
     global fractalanglefactor, iteration_count, fractalangle1, numberiterationsfirstfractal 
 
+
     for geometries in visgeometries:
         scene.remove(geometries)
 
-    visgeometries.clear()
-
+ 
     if fractalanglefactor != geom_params.fractalangle or fractalangle1 != geom_params.branch1 or numberiterationsfirstfractal != geom_params.numberiterationsfirstfractal:
 
         fractalanglefactor = geom_params.fractalangle
@@ -1026,7 +1244,9 @@ def buttonfunctionfractal1():
 
     else:
 
-    
+        
+        
+
         generate_l_system_fractal(numberiterationsfirstfractal)
 
         draw_systemA()
@@ -1083,7 +1303,6 @@ def buttonfunctionwalker():
     for geometries in visgeometries:
         scene.remove(geometries)
 
-    visgeometries.clear()
 
     visgeometries.clear()
 
@@ -1110,28 +1329,6 @@ def buttonfunctionwalker():
         update_linesa_on_surface(transparentlines)
 
 
-
-def buttonfunction3():
-
-    global pointsA, iteration_count, maxiterationstriangle
-
-    iteration_count += 1
-
-    if iteration_count <= 6:
-
-        points = [np.array([0, 0]), np.array([0, 40]), np.array([40, 40]), np.array([40, 0])]
-        
-        triangle(points, iteration_count)
-
-        triangle2(points, iteration_count)
-        
-        draw_systemA()
-
-        update_linesa_on_surface(transparentlines)
-
-    else:
-
-        pass
     
 
 
@@ -1156,7 +1353,7 @@ def buttonattractorA():
 
 def buttonattractorB():
 
-    global  pointsB
+    global pointsB
 
     attractors = [np.array([40, 0])]
 
@@ -1236,10 +1433,10 @@ def surfacegui():
    
 
     if geometry_mesh.visible == False:
-        folder7.add(geom_params, 'surfacevisible')
+        folder7.add(geom_params, 'surfacevisible').name('show the surface')
     
     if geometry_mesh.visible == True:
-        folder7.add(geom_params, "surfaceunvisible")
+        folder7.add(geom_params, "surfaceunvisible").name('hide the surface')
 
 
 
@@ -1274,6 +1471,7 @@ def buttonfunctionresetbutton():
 
     iteration_count = 0
 
+
     for geometries in visgeometries:
         scene.remove(geometries)
 
@@ -1298,6 +1496,7 @@ def buttonfunctionresetbutton():
 def buttonfunctionfin():
     global points, folder1, folder2, folder3, folder4, folder5, gui
 
+
     geometry_mesh.visible = False
 
     for handles in curve_handles:
@@ -1310,7 +1509,6 @@ def buttonfunctionfin():
     transform_controls.visible = False
 
     folder7.destroy()
-
     surfacegui()
    
 
@@ -1326,6 +1524,8 @@ def on_double_click(event):
     scene.remove(transform_controls)
 
 
+
+
 def on_pointer_down(event):
     global action, ACTION_SELECT, mouse, window
     action = ACTION_SELECT
@@ -1336,6 +1536,8 @@ def on_pointer_down(event):
 def on_pointer_move(event):
     global action, ACTION_SELECT, ACTION_NONE, transform_controls, raycaster, mouse, camera, curve_handles, scene
     global target
+   
+
    
     event.preventDefault()
     if action == ACTION_SELECT:
@@ -1431,7 +1633,6 @@ def updatesurface(transparency ):
 
     
     new_geometry_mesh = THREE.Mesh.new(geometry2, meshplane)
-
     scene.remove(geometry_mesh)
     geometry_mesh = new_geometry_mesh
     surfaces.append(geometry_mesh)
@@ -1441,14 +1642,16 @@ def updatesurface(transparency ):
 
 def update_linesa_on_surface(transparentlines):
 
+    global line2
+
+   
     global threecurrentline, baseshapelines
     global scene, linematerial
 
-    global pointsA
+    global pointsA 
 
 
     #updatelinesAonsurface-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
     if len(visgeometries) != 0:
         for l in visgeometries:
@@ -1458,6 +1661,7 @@ def update_linesa_on_surface(transparentlines):
 
     for pairs in baseshapelines:
         curve_pts = []
+
 
         for id in pairs:
 
@@ -1472,8 +1676,6 @@ def update_linesa_on_surface(transparentlines):
             curve_pts.append(target)
 
        
-
-        
         color = THREE.Color.new()
         POS = []
         COLS = []  
@@ -1494,6 +1696,8 @@ def update_linesa_on_surface(transparentlines):
 
         visgeometries.append(line2)
         scene.add(line2)
+
+        export_obj(line2, 'linea.obj')
     
     
 
@@ -1535,6 +1739,7 @@ def update_linesa_on_surface(transparentlines):
 
         scene.add(line3)
         
+        export_obj(line3, 'lineb.obj')
     
 
 def render(*args):
@@ -1549,7 +1754,6 @@ def render(*args):
     controls.update()
     composer.render()
 
-    
 
 
 # Graphical post-processing
@@ -1589,3 +1793,5 @@ def on_window_resize(event):
 
 if __name__=='__main__':
     main()
+   
+    
