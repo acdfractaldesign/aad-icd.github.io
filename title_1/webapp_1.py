@@ -91,7 +91,7 @@ def main():
         "walkerdesign":buttonfunctionwalker,
         "reset":buttonfunctionresetbutton,
         "export":buttonexporter,
-        "voronoi": buttonvoronoi,
+        #"voronoi": buttonvoronoi,
         "lattice": buttonlattice,
 
         
@@ -892,7 +892,7 @@ def generate_l_system_fractal(iterations):
 
 
 
-def buttonvoronoi():
+"""def buttonvoronoi():
 
     global pointsA, density, visgeometries
    
@@ -969,11 +969,11 @@ def distance_to_edge(x, y, w, h):
 
 def density_function(x, y, w, h, max_density):
     d = distance_to_edge(x, y, w, h)
-    return 1 + (max_density - 1) * (1 - d / max(w, h))
+    return 1 + (max_density - 1) * (1 - d / max(w, h))"""
 
 
 
-def voronoibasic(density):
+"""def voronoibasic(density):
 
     global pointsA
     
@@ -1011,7 +1011,7 @@ def voronoibasic(density):
     for points in sorted_regions:
         for point in points:
             pointsA.append(np.array(point))
-
+"""
 
 
 def buttonlattice():
@@ -1198,10 +1198,10 @@ def guifunction():
 
     #voronoi
 
-    folder6 = gui.addFolder('7th - Voronoi')
+    """folder6 = gui.addFolder('7th - Voronoi')
     folder6.add(geom_params,'density', 600,700, 1).name('density of voronoi')
     folder6.add(geom_params, 'voronoi').name('voronoi')
-    folder6.close()
+    folder6.close()"""
 
     gui.add(geom_params, 'reset')
 
