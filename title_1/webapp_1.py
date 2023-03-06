@@ -892,126 +892,6 @@ def generate_l_system_fractal(iterations):
 
 
 
-"""def buttonvoronoi():
-
-    global pointsA, density, visgeometries
-   
-    if density != geom_params.density:
-
-        for geometries in visgeometries:
-            scene.remove(geometries)
-        
-        
-        density = geom_params.density
-
-        voronoibasic(density )
-
-        draw_systemA()
-
-        update_linesa_on_surface(transparentlines)
-
-    else:
-
-        voronoibasic(density )
-        #voronoi()
-
-        draw_systemA()
-
-        update_linesa_on_surface(transparentlines)
-
-
-def voronoi():
-
-    # Set grid size and border
-    size = 40
-    border = 2
-
-    # Create random points within a smaller rectangle with border
-    points = np.random.rand(50, 2) * (size - 2*border) + border
-
-    # Compute Voronoi tessellation
-    vor = Voronoi(points)
-
-    # Clip Voronoi vertices to grid boundaries
-    vertices = vor.vertices
-    vertices[:, 0] = np.clip(vertices[:, 0], border, size-border)
-    vertices[:, 1] = np.clip(vertices[:, 1], border, size-border)
-
-    # Sort Voronoi points by region indices
-    sorted_points = []
-    for i, region in enumerate(vor.regions):
-        if -1 in region: # ignore regions outside of the Voronoi diagram
-            continue
-        if not region or max(region) >= len(vertices): # ignore empty regions and regions with invalid indices
-            continue
-        vertices = [vertices[i] for i in region]
-        sorted_points.append(vertices)
-
-
-
-    # Store Voronoi points as numpy arrays in a list
-    #vor_list = []
-    for points in sorted_points:
-        for point in points:
-            pointsA.append(np.array(point))
-
-
-def density_func(dist, a=10, b=0.05):
-
-    global size, border
-
-    return 1 / (1 + np.exp(-a * (dist - size/2) * b))
-
-
-
-def distance_to_edge(x, y, w, h):
-    return min(x, y, w-x, h-y)
-
-def density_function(x, y, w, h, max_density):
-    d = distance_to_edge(x, y, w, h)
-    return 1 + (max_density - 1) * (1 - d / max(w, h))"""
-
-
-
-"""def voronoibasic(density):
-
-    global pointsA
-    
-    size = 40
-    border = 0
-
-
-    # Create random points within a smaller rectangle with border
-    points = np.random.rand(density, 2) * (size - 2*border) + border
-
-    # Compute Voronoi tessellation
-    vor = Voronoi(points)
-
-    # Clip Voronoi vertices to grid boundaries
-    vertices = vor.vertices
-    vertices[:, 0] = np.clip(vertices[:, 0], border, size-border)
-    vertices[:, 1] = np.clip(vertices[:, 1], border, size-border)
-
-    
-    # Sort Voronoi points by region width
-    sorted_points = []
-    for i, region in enumerate(vor.regions):
-        if -1 in region or len(region) == 0:
-            continue
-        region_vertices = [vertices[i] for i in region if i < len(vertices)]
-        if len(region_vertices) > 0:
-            sorted_points.append(np.array(region_vertices))
-
-    indices = np.argsort([points[:, 0].max() - points[:, 0].min() for points in sorted_points])[::-1]
-
-    # Store Voronoi points in a list, sorted by width
-    sorted_regions = [sorted_points[i] for i in indices]
-    
-    
-    for points in sorted_regions:
-        for point in points:
-            pointsA.append(np.array(point))
-"""
 
 
 def buttonlattice():
@@ -1182,7 +1062,7 @@ def guifunction():
     folder3.close()
 
 
-    folder4 = gui.addFolder('5th - zone attractos')
+    folder4 = gui.addFolder('4th - zone attractos')
     folder4.add(geom_params, 'attractorA').name('attractorA ')
     folder4.add(geom_params, 'attractorB').name(' attractorB')
     folder4.add(geom_params, 'attractorC').name('attractorC')
@@ -1191,18 +1071,12 @@ def guifunction():
 
     #lattice
 
-    folder5 = gui.addFolder('6th -latticestrucuture')
+    folder5 = gui.addFolder('5th -latticestrucuture')
     folder5.add(geom_params, 'lattice').name('latticegrid ')
     folder5.add(geom_params,'densitylattice', 1,4, 0.1).name('spacing')
     folder5.close()
 
-    #voronoi
-
-    """folder6 = gui.addFolder('7th - Voronoi')
-    folder6.add(geom_params,'density', 600,700, 1).name('density of voronoi')
-    folder6.add(geom_params, 'voronoi').name('voronoi')
-    folder6.close()"""
-
+    
     gui.add(geom_params, 'reset')
 
     surfacegui()
